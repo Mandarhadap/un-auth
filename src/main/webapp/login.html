@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HR Login</title>
+</head>
+<body>
+  <h1>HR Login</h1>
+
+  <form id="loginForm">
+    <label>
+      Username:
+      <input type="text" id="username" required>
+    </label>
+    <br><br>
+    <label>
+      Password:
+      <input type="password" id="password" required>
+    </label>
+    <br><br>
+    <button type="submit">Login</button>
+  </form>
+
+  <p id="message" style="font-weight:bold;"></p>
+
+  <script>
+    const BASE_URL = 'http://localhost:5000/api';
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const body = {
+        username: document.getElementById('username').value,
+        password: document.getElementById('password').value
+      };
+
+      const msg = document.getElementById('message');
+      msg.style.color = 'black';
+      msg.textContent = 'Checking...';
+
+      try {
+        const res = await fetch(`${BASE_URL}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.authenticated) {
+          msg.style.color = 'green';
+          msg.textContent = 'Login successful, redirecting...';
+          // Go to dashboard
+          window.location.href = 'dashboard.html';
+        } else {
+          msg.style.color = 'red';
+          msg.textContent = 'Invalid username or password';
+        }
+      } catch (err) {
+        console.error(err);
+        msg.style.color = 'red';
+        msg.textContent = 'Server error';
+      }
+    });
+  </script>
+</body>
+</html>

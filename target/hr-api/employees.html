@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Employees</title>
+</head>
+<body>
+  <h1>Employees</h1>
+
+  <p>
+    <a href="dashboard.html">⬅ Back to Dashboard</a>
+  </p>
+
+  <label>
+    Dept No:
+    <input type="number" id="filterDept" value="10">
+  </label>
+  <button id="loadBtn">Load Employees</button>
+
+  <p id="status"></p>
+
+  <table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+      <tr>
+        <th>Emp No</th>
+        <th>Name</th>
+        <th>Job</th>
+        <th>Mgr</th>
+        <th>Hiredate</th>
+        <th>Salary</th>
+        <th>Comm</th>
+        <th>Dept No</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="empBody"></tbody>
+  </table>
+
+  <h2>Add / Update Employee</h2>
+
+  <form id="empForm">
+    <label>Emp No: <input type="number" id="empno" required></label><br><br>
+    <label>Name: <input type="text" id="ename" required></label><br><br>
+    <label>Job: <input type="text" id="job"></label><br><br>
+    <label>Mgr: <input type="number" id="mgr"></label><br><br>
+    <label>Hire Date (YYYY-MM-DD): <input type="text" id="hiredate"></label><br><br>
+    <label>Salary: <input type="number" step="0.01" id="sal"></label><br><br>
+    <label>Comm: <input type="number" step="0.01" id="comm"></label><br><br>
+    <label>Dept No: <input type="number" id="deptno" required></label><br><br>
+    <button type="submit">Add</button>
+    <button type="button" id="updateEmpBtn">Update</button>
+  </form>
+
+  <script>
+    const BASE_URL = 'http://localhost:5000/api';
+    const tbody = document.getElementById('empBody');
+    const statusEl = document.getElementById('status');
+
+    async function loadEmployees() {
+      const deptno = document.getElementById('filterDept').value;
+
+      statusEl.textContent = 'Loading...';
+      tbody.innerHTML = '';
+
+      const url = deptno
+        ? `${BASE_URL}/employees?deptno=${deptno}`
+        : `${BASE_URL}/employees`;
+
+      try {
+        const res = await fetch(url);
+        if (res.status === 401) {
+          window.location.href = 'login.html';
+          return;
+        }
+        const data = await res.json();
+
+        data.forEach(e => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${e.empno}</td>
+            <td>${e.ename ?? ''}</td>
+            <td>${e.job ?? ''}</td>
+            <td>${e.mgr ?? ''}</td>
+            <td>${e.hiredate ?? ''}</td>
+            <td>${e.sal ?? ''}</td>
+            <td>${e.comm ?? ''}</td>
+            <td>${e.deptno ?? ''}</td>
+            <td>
+              <button class="delEmpBtn" data-emp="${e.empno}">Delete</button>
+            </td>
+          `;
+          // click row to load into form
+          tr.addEventListener('click', () => {
+            document.getElementById('empno').value = e.empno;
+            document.getElementById('ename').value = e.ename ?? '';
+            document.getElementById('job').value = e.job ?? '';
+            document.getElementById('mgr').value = e.mgr ?? '';
+            document.getElementById('hiredate').value = e.hiredate ?? '';
+            document.getElementById('sal').value = e.sal ?? '';
+            document.getElementById('comm').value = e.comm ?? '';
+            document.getElementById('deptno').value = e.deptno ?? '';
+          });
+          tbody.appendChild(tr);
+        });
+
+        statusEl.textContent = `Loaded ${data.length} employee(s).`;
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = 'Error loading employees';
+      }
+    }
+
+    document.getElementById('loadBtn').addEventListener('click', loadEmployees);
+
+    // DELETE
+    tbody.addEventListener('click', async (e) => {
+      if (e.target.classList.contains('delEmpBtn')) {
+        e.stopPropagation();
+        const empno = e.target.dataset.emp;
+
+        if (!confirm(`Delete employee ${empno}?`)) return;
+
+        const res = await fetch(`${BASE_URL}/employees?empno=${empno}`, {
+          method: 'DELETE'
+        });
+
+        if (res.status === 204) {
+          statusEl.textContent = 'Employee deleted';
+          loadEmployees();
+        } else if (res.status === 401) {
+          window.location.href = 'login.html';
+        } else {
+          statusEl.textContent = 'Delete failed';
+        }
+      }
+    });
+
+    // ADD
+    document.getElementById('empForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const body = {
+        empno: parseInt(document.getElementById('empno').value, 10),
+        ename: document.getElementById('ename').value,
+        job: document.getElementById('job').value || null,
+        mgr: document.getElementById('mgr').value || null,
+        hiredate: document.getElementById('hiredate').value || null,
+        sal: document.getElementById('sal').value || null,
+        comm: document.getElementById('comm').value || null,
+        deptno: parseInt(document.getElementById('deptno').value, 10)
+      };
+
+      const res = await fetch(`${BASE_URL}/employees`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        statusEl.textContent = 'Employee added.';
+        e.target.reset();
+        loadEmployees();
+      } else if (res.status === 401) {
+        window.location.href = 'login.html';
+      } else {
+        statusEl.textContent = 'Insert failed.';
+      }
+    });
+
+    // UPDATE
+    document.getElementById('updateEmpBtn').addEventListener('click', async () => {
+      const body = {
+        empno: parseInt(document.getElementById('empno').value, 10),
+        ename: document.getElementById('ename').value,
+        job: document.getElementById('job').value || null,
+        mgr: document.getElementById('mgr').value || null,
+        hiredate: document.getElementById('hiredate').value || null,
+        sal: document.getElementById('sal').value || null,
+        comm: document.getElementById('comm').value || null,
+        deptno: parseInt(document.getElementById('deptno').value, 10)
+      };
+
+      const res = await fetch(`${BASE_URL}/employees`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        statusEl.textContent = 'Employee updated.';
+        loadEmployees();
+      } else if (res.status === 401) {
+        window.location.href = 'login.html';
+      } else {
+        statusEl.textContent = 'Update failed.';
+      }
+    });
+
+    loadEmployees(); // initial load
+  </script>
+</body>
+</html>

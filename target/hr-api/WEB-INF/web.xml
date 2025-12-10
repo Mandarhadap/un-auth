@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
+                             https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+
+    <display-name>hr-api</display-name>
+
+    <!-- Dept servlet -->
+    <servlet>
+        <servlet-name>DeptServlet</servlet-name>
+        <servlet-class>app.api.DeptServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DeptServlet</servlet-name>
+        <url-pattern>/api/departments</url-pattern>
+    </servlet-mapping>
+
+    <!-- Emp servlet -->
+    <servlet>
+        <servlet-name>EmpServlet</servlet-name>
+        <servlet-class>app.api.EmpServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>EmpServlet</servlet-name>
+        <url-pattern>/api/employees</url-pattern>
+    </servlet-mapping>
+
+   
+    <!-- Logout servlet -->
+    <servlet>
+        <servlet-name>LogoutServlet</servlet-name>
+        <servlet-class>app.api.LogoutServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>LogoutServlet</servlet-name>
+        <url-pattern>/api/logout</url-pattern>
+    </servlet-mapping>
+
+    <!-- CORS filter -->
+    <filter>
+        <filter-name>CorsFilter</filter-name>
+        <filter-class>app.api.CorsFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>CorsFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    
+
+</web-app>

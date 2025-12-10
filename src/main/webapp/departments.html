@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Departments</title>
+</head>
+<body>
+  <h1>Departments</h1>
+
+  <p>
+    <a href="dashboard.html">⬅ Back to Dashboard</a>
+  </p>
+
+  <button id="refreshBtn">Refresh</button>
+  <p id="status"></p>
+
+  <table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+      <tr>
+        <th>Dept No</th>
+        <th>Name</th>
+        <th>Loc</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="deptBody"></tbody>
+  </table>
+
+  <h2>Add / Update Department</h2>
+
+  <form id="deptForm">
+    <label>Dept No: <input type="number" id="deptno" required></label><br><br>
+    <label>Name: <input type="text" id="dname" required></label><br><br>
+    <label>Location: <input type="text" id="loc" required></label><br><br>
+    <button type="submit">Add</button>
+    <button type="button" id="updateDeptBtn">Update</button>
+  </form>
+
+  <script>
+    const BASE_URL = 'http://localhost:5000/api';
+    const tbody = document.getElementById('deptBody');
+    const statusEl = document.getElementById('status');
+
+    async function loadDepartments() {
+      statusEl.textContent = 'Loading...';
+      tbody.innerHTML = '';
+
+      try {
+        const res = await fetch(`${BASE_URL}/departments`);
+        if (res.status === 401) {
+          // Not logged in
+          window.location.href = 'login.html';
+          return;
+        }
+        const data = await res.json();
+
+        data.forEach(d => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${d.deptno}</td>
+            <td>${d.dname ?? ''}</td>
+            <td>${d.loc ?? ''}</td>
+            <td>
+              <button class="delBtn" data-id="${d.deptno}">Delete</button>
+            </td>
+          `;
+          // click row to load into form
+          tr.addEventListener('click', () => {
+            document.getElementById('deptno').value = d.deptno;
+            document.getElementById('dname').value = d.dname ?? '';
+            document.getElementById('loc').value = d.loc ?? '';
+          });
+          tbody.appendChild(tr);
+        });
+
+        statusEl.textContent = `Loaded ${data.length} department(s).`;
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = 'Error loading departments';
+      }
+    }
+
+    document.getElementById('refreshBtn').addEventListener('click', loadDepartments);
+
+    // DELETE
+    tbody.addEventListener('click', async (e) => {
+      if (e.target.classList.contains('delBtn')) {
+        e.stopPropagation();
+        const deptno = e.target.dataset.id;
+
+        if (!confirm(`Delete department ${deptno}?`)) return;
+
+        const res = await fetch(`${BASE_URL}/departments?deptno=${deptno}`, {
+          method: 'DELETE'
+        });
+
+        if (res.status === 204) {
+          statusEl.textContent = 'Deleted successfully';
+          loadDepartments();
+        } else if (res.status === 401) {
+          window.location.href = 'login.html';
+        } else {
+          statusEl.textContent = 'Delete failed';
+        }
+      }
+    });
+
+    // ADD
+    document.getElementById('deptForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const body = {
+        deptno: parseInt(document.getElementById('deptno').value, 10),
+        dname: document.getElementById('dname').value,
+        loc: document.getElementById('loc').value
+      };
+
+      const res = await fetch(`${BASE_URL}/departments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        statusEl.textContent = 'Added department.';
+        e.target.reset();
+        loadDepartments();
+      } else if (res.status === 401) {
+        window.location.href = 'login.html';
+      } else {
+        statusEl.textContent = 'Insert failed.';
+      }
+    });
+
+    // UPDATE
+    document.getElementById('updateDeptBtn').addEventListener('click', async () => {
+      const body = {
+        deptno: parseInt(document.getElementById('deptno').value, 10),
+        dname: document.getElementById('dname').value,
+        loc: document.getElementById('loc').value
+      };
+
+      const res = await fetch(`${BASE_URL}/departments`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        statusEl.textContent = 'Updated department.';
+        loadDepartments();
+      } else if (res.status === 401) {
+        window.location.href = 'login.html';
+      } else {
+        statusEl.textContent = 'Update failed.';
+      }
+    });
+
+    loadDepartments();
+  </script>
+</body>
+</html>

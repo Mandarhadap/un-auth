@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HR Dashboard</title>
+</head>
+<body>
+  <h1>HR Dashboard</h1>
+
+  <ul>
+    <li><a href="departments.html">Manage Departments</a></li>
+    <li><a href="employees.html">Manage Employees</a></li>
+  </ul>
+
+ 
+  <p id="status"></p>
+
+  <script>
+    const BASE_URL = 'http://localhost:5000/api';
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      const statusEl = document.getElementById('status');
+      try {
+        await fetch(`${BASE_URL}/logout`, { method: 'POST' });
+        statusEl.textContent = 'Logged out';
+        window.location.href = 'login.html';
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = 'Logout failed';
+      }
+    });
+  </script>
+</body>
+</html>
